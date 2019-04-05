@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -98,11 +99,18 @@ public class GPDispatcherServlet extends HttpServlet {
                 paramValues[i]=resp;
                 continue;
             }else if(parameterType==String.class){
-                GPRequestParameter parameter=method.getAnnotation(GPRequestParameter.class);
-                if(params.containsKey(parameter.value())){
-                    for(Map.Entry<String,String[]> param:params.entrySet() ){
-                        String value=Arrays.toString(param.getValue()).replaceAll("\\[|\\]","").replaceAll("\\s",",");
-                        paramValues[i]=value;
+                Annotation[][] pa = method.getParameterAnnotations();
+                for(int j=0;j<pa.length;j++){
+                    for (Annotation a:pa[j]){
+                        if(a instanceof GPRequestParameter){
+                            String paramName =((GPRequestParameter) a).value();
+                            if(params.containsKey(paramName)){
+                                for(Map.Entry<String,String[]> param:params.entrySet() ){
+                                    String value=Arrays.toString(param.getValue()).replaceAll("\\[|\\]","").replaceAll("\\s",",");
+                                    paramValues[i]=value;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -280,7 +288,7 @@ public class GPDispatcherServlet extends HttpServlet {
         if(ioc.isEmpty()){return;}
         for(Map.Entry<String,Object> entry:ioc.entrySet()){
             Class<?> clazz=entry.getValue().getClass();
-            if(clazz.isAnnotationPresent(GPController.class)){continue;}
+            if(!clazz.isAnnotationPresent(GPController.class)){continue;}
 
             //保存写在类上面的@GPRequestMapping("/demo");
             String baseUrl="";
@@ -293,7 +301,7 @@ public class GPDispatcherServlet extends HttpServlet {
                 if(!method.isAnnotationPresent(GPRequestMapper.class)){
                     continue;
                 }
-                GPRequestMapper requestMapper=clazz.getAnnotation(GPRequestMapper.class);
+                GPRequestMapper requestMapper=method.getAnnotation(GPRequestMapper.class);
                 //优化
                 // //demo //query
                 String url = ("/"+baseUrl +"/"+requestMapper.value()).replaceAll("/+","/");

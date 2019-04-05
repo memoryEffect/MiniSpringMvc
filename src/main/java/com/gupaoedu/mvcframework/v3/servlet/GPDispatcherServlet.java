@@ -79,7 +79,7 @@ public class GPDispatcherServlet extends HttpServlet {
      */
     //url参数的动态获取
     private void doDispatch(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        Handler handler=getHandle(req);
+       Handler handler=getHandle(req);
         if(handler==null){
             resp.getWriter().write("404 Not Found");
             return;
@@ -115,7 +115,7 @@ public class GPDispatcherServlet extends HttpServlet {
         if(handlerMapping.isEmpty()){return null;}
         String url = req.getRequestURI();
         String contextPath = req.getContextPath();
-        url=url.replace(contextPath,"").replaceAll("/+","");
+        url=url.replace(contextPath,"").replaceAll("/+","/");
         for(Handler handler :handlerMapping){
             Matcher matcher =handler.pattern.matcher(url);
             //如果没有匹配上继续下一个
@@ -290,7 +290,7 @@ public class GPDispatcherServlet extends HttpServlet {
         if(ioc.isEmpty()){return;}
         for(Map.Entry<String,Object> entry:ioc.entrySet()){
             Class<?> clazz=entry.getValue().getClass();
-            if(clazz.isAnnotationPresent(GPController.class)){continue;}
+            if(!clazz.isAnnotationPresent(GPController.class)){continue;}
 
             //保存写在类上面的@GPRequestMapping("/demo");
             String baseUrl="";
@@ -310,7 +310,7 @@ public class GPDispatcherServlet extends HttpServlet {
                     continue;
                 }
                 //映射URL
-                GPRequestMapper requestMapper=clazz.getAnnotation(GPRequestMapper.class);
+                GPRequestMapper requestMapper=method.getAnnotation(GPRequestMapper.class);
                 //优化
                 // //demo //query
                 String url = ("/"+baseUrl +"/"+requestMapper.value()).replaceAll("/+","/");

@@ -42,7 +42,7 @@ public class Handler {
             }
         }
         //提取方法中的request和response参数
-        Class<?>[] paramsType =method.getExceptionTypes();
+        Class<?>[] paramsType =method.getParameterTypes();
         for(int i=0;i<paramsType.length;i++){
             Class<?> type =paramsType[i];
             if(type== HttpServletRequest.class||type== HttpServletResponse.class){
